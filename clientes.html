@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clientes Registrados</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+        color: #333;
+      }
+
+      .container {
+        /* max-width: 800px; */
+        width: 80vw;
+        margin: 20px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: auto;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        overflow: auto;
+      }
+
+      table th,
+      table td {
+        padding: 10px;
+        text-align: left;
+        border: 1px solid #ddd;
+      }
+
+      table th {
+        background-color: #f4f4f4;
+      }
+
+      #pagination-controls {
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      button {
+        padding: 8px 16px;
+        margin: 0 5px;
+        border: none;
+        border-radius: 4px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        background-color: #ddd;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Lista de Clientes Registrados</h1>
+   
+        <!-- Tabla de clientes -->
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Correo Electrónico</th>
+              <th>Teléfono</th>
+              <th>Documento</th>
+              <th>Fecha Nacimiento</th>
+              <th>Nombre Negocio</th>
+              <th>Descripcion Negocio</th>
+            </tr>
+          </thead>
+          <tbody id="clients">
+            <!-- Clientes cargados dinámicamente -->
+          </tbody>
+        </table>
+
+
+      <!-- Información de paginación -->
+      <div id="pagination-info">
+        <p id="pagination-summary"></p>
+      </div>
+
+      <!-- Controles de paginación -->
+      <div id="pagination-controls">
+        <button id="prev-page" disabled>&laquo; Anterior</button>
+        <span id="current-page">1</span>
+        <button id="next-page" disabled>Siguiente &raquo;</button>
+      </div>
+    </div>
+
+    <script>
+      const apiUrl = "https://back-mistterqr-node.onrender.com/api/clientes";
+      let currentPage = 1;
+      let totalPages = 0;
+
+      async function fetchClients(page = 1, limit = 10) {
+        try {
+          const response = await fetch(`${apiUrl}?page=${page}&limit=${limit}`);
+          if (!response.ok) throw new Error("Error al obtener los datos");
+          const data = await response.json();
+          console.log(data)
+          renderClients(data.data);
+          updatePagination(data.pagination);
+        } catch (error) {
+          console.error(error);
+          alert("Hubo un error al cargar los datos.");
+        }
+      }
+
+      function renderClients(clients) {
+        const clientsTable = document.getElementById("clients");
+        clientsTable.innerHTML = ""; // Limpiar la tabla
+
+        clients.forEach((client) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+      <td>${client.id}</td>
+      <td>${client.nombre}</td>
+      <td>${client.apellido}</td>
+      <td>${client.correo_electronico}</td>
+      <td>${client.numero_celular}</td>
+      <td>${client.numero_documento}</td>
+      <td>${client.fecha_nacimiento}</td>
+      <td>${client.nombre_negocio}</td>
+      <td>${client.descripcion_negocio}</td>
+    `;
+          clientsTable.appendChild(row);
+        });
+      }
+
+      function updatePagination({
+        totalItems,
+        totalPages: total,
+        currentPage: current,
+        itemsPerPage,
+      }) {
+        totalPages = total;
+        currentPage = current;
+
+        document.getElementById(
+          "pagination-summary"
+        ).textContent = `Mostrando ${itemsPerPage} de ${totalItems} elementos en total.`;
+
+        document.getElementById("current-page").textContent = currentPage;
+
+        document.getElementById("prev-page").disabled = currentPage === 1;
+        document.getElementById("next-page").disabled =
+          currentPage === totalPages;
+      }
+
+      document.getElementById("prev-page").addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          fetchClients(currentPage);
+        }
+      });
+
+      document.getElementById("next-page").addEventListener("click", () => {
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          fetchClients(currentPage);
+        }
+      });
+
+      // Inicializar la tabla
+      fetchClients();
+    </script>
+  </body>
+</html>
